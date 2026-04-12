@@ -8,7 +8,7 @@ def agentic_rag_pipeline(user_query, chat_history):
 
     # Step 1: Context-aware rewrite
     improved_query = rewrite_query(user_query, chat_history)
-    #print(improved_query)
+    print(improved_query)
 
     # Step 2: Retrieve
     docs = retrieve_documents(improved_query)
