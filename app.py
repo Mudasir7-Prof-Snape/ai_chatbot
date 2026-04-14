@@ -5,6 +5,7 @@ from ingestion.chunker import chunk_documents
 from ingestion.indexer import index_documents
 from agent.memory import get_chat_history, update_chat_history
 from agent.pipeline import agentic_rag_pipeline
+from vectorstore.db_manager import list_documents, delete_document
 
 
 # -------------------- PAGE CONFIG --------------------
@@ -63,7 +64,7 @@ st.markdown("""
 # -------------------- SIDEBAR --------------------
 with st.sidebar:
     st.title("JILE AI")
-    st.markdown("---")
+    # st.markdown("---")
 
     st.subheader("📂 Upload Documents")
     uploaded_pdfs = st.file_uploader(
@@ -72,8 +73,9 @@ with st.sidebar:
         accept_multiple_files=True
     )
 
-    if "docs_loaded" in st.session_state:
-        st.success("Documents Ready")
+    # if "docs_loaded" in st.session_state:
+    #     st.success("Documents Ready")
+        
     # else:
     #     st.info("Upload PDFs to begin")
 
@@ -82,11 +84,36 @@ with st.sidebar:
     if st.button("🧹 Clear Chat"):
         st.session_state.chat_history = []
         st.rerun()
+    # --------------------------------------------------------
+    st.subheader("📂 Processed Documents")
+
+    docs = list_documents()
+
+    if docs:
+        for doc in docs:
+            col1, col2 = st.columns([4, 1])
+
+            with col1:
+                st.write(doc)
+
+            with col2:
+                if st.button("❌", key=doc):
+                    delete_document(doc)
+                    if "chat_history" in st.session_state:
+                        st.session_state.chat_history = []
+                    st.success(f"{doc} deleted!")
+                    st.rerun()
+    else:
+        st.info("No documents processed yet.")
+# --------------------------------------------------------
+
 
 
 # -------------------- HEADER --------------------
 st.markdown("## JILE AI Assistant")
 st.caption("Smart AI powered document assistant")
+
+
 
 
 # -------------------- CHAT HISTORY INIT --------------------
@@ -104,32 +131,59 @@ for chat in st.session_state.chat_history:
 
 
 # -------------------- PROCESS PDFs --------------------
-if "processed_files" not in st.session_state:
-    st.session_state.processed_files = set()
+# if "processed_files" not in st.session_state:
+#     st.session_state.processed_files = set()
+
+# if uploaded_pdfs:
+
+#     new_files = []
+
+#     for pdf in uploaded_pdfs:
+#         if pdf.name not in st.session_state.processed_files:
+#             new_files.append(pdf)
+
+#     if new_files:
+
+#         for pdf in new_files:
+#             path = save_uploaded_file(pdf)
+#             raw_docs = load_pdf_documents(path)
+#             chunks = chunk_documents(raw_docs, pdf.name)
+#             index_documents(chunks)
+
+#             # mark as processed
+#             st.session_state.processed_files.add(pdf.name)
+
+#         st.success(f"{len(new_files)} new document(s) processed!")
+
+#     # else:
+#     #     st.info("These files are already processed.")
 
 if uploaded_pdfs:
 
-    new_files = []
+    if "processed_files" not in st.session_state:
+        st.session_state.processed_files = set()
 
-    for pdf in uploaded_pdfs:
-        if pdf.name not in st.session_state.processed_files:
-            new_files.append(pdf)
+    new_files_processed = False
 
-    if new_files:
+    for uploaded_pdf in uploaded_pdfs:
 
-        for pdf in new_files:
-            path = save_uploaded_file(pdf)
-            raw_docs = load_pdf_documents(path)
-            chunks = chunk_documents(raw_docs)
+        if uploaded_pdf.name not in st.session_state.processed_files:
+
+            saved_path = save_uploaded_file(uploaded_pdf)
+
+            raw_docs = load_pdf_documents(saved_path)
+
+            chunks = chunk_documents(raw_docs, uploaded_pdf.name)
+
             index_documents(chunks)
 
-            # mark as processed
-            st.session_state.processed_files.add(pdf.name)
+            st.session_state.processed_files.add(uploaded_pdf.name)
+            new_files_processed = True
 
-        st.success(f"{len(new_files)} new document(s) processed!")
-
-    # else:
-    #     st.info("These files are already processed.")
+    if new_files_processed:
+        st.session_state.docs_loaded = True
+        st.success("Documents processed!")
+        st.rerun()
 
 
 
