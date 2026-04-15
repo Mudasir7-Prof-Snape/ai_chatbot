@@ -1,5 +1,5 @@
 import streamlit as st
-
+import time
 from ingestion.loader import save_uploaded_file, load_pdf_documents
 from ingestion.chunker import chunk_documents
 from ingestion.indexer import index_documents
@@ -22,6 +22,22 @@ st.markdown("""
 .main {
     background-color: #0e1117;
     color: white;
+    padding-bottom: 60px;
+}
+            
+/* Fixed disclaimer at bottom */
+.fixed-disclaimer {
+    position: fixed;
+    bottom: 8px;
+    left: 0;
+    width: 100%;
+    text-align: center;
+    font-size: 14px;
+    color: white;
+    background-color: #0e1117;
+    padding: 6px 0;
+    z-index: 999;
+    border-top: 1px solid #1f2937;
 }
 
 /* Chat bubbles */
@@ -74,7 +90,10 @@ with st.sidebar:
     )
 
     # if "docs_loaded" in st.session_state:
-    #     st.success("Documents Ready")
+    #     container = st.empty()
+    #     container.success("Documents Ready")
+    #     time.sleep(3)
+    #     container.empty()
         
     # else:
     #     st.info("Upload PDFs to begin")
@@ -112,9 +131,6 @@ with st.sidebar:
 # -------------------- HEADER --------------------
 st.markdown("## JILE AI Assistant")
 st.caption("Smart AI powered document assistant")
-
-
-
 
 # -------------------- CHAT HISTORY INIT --------------------
 if "chat_history" not in st.session_state:
@@ -190,6 +206,7 @@ if uploaded_pdfs:
 # -------------------- CHAT INPUT --------------------
 user_input = st.chat_input("Ask something about your documents...")
 
+
 if user_input:
 
     with st.chat_message("user"):
@@ -205,3 +222,12 @@ if user_input:
 
     # Save memory
     update_chat_history(st.session_state, user_input, response)
+
+st.markdown(
+    """
+    <div class="fixed-disclaimer">
+        ⚠️ <b>Disclaimer:</b> AI-generated responses may contain errors. Please verify important information.
+    </div>
+    """,
+    unsafe_allow_html=True
+)

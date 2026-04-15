@@ -20,6 +20,8 @@
 #     )
 
 from vectorstore.vectordb import get_vector_db
+import os
+from config import PDF_STORAGE_PATH
 
 def list_documents():
 
@@ -42,3 +44,8 @@ def delete_document(file_name):
     db._collection.delete(
         where={"source": file_name}
     )
+
+    file_path = os.path.join(PDF_STORAGE_PATH, file_name)
+
+    if os.path.exists(file_path):
+        os.remove(file_path)
